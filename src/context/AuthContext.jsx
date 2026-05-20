@@ -9,11 +9,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const token = localStorage.getItem("aurum_token");
-
-    if (!token) {
-      setLoading(false);
-      return;
-    }
+    if (!token) { setLoading(false); return; }
 
     // Timeout de 5s — si el backend no responde, igual mostramos la página
     const timeout = setTimeout(() => {
@@ -22,41 +18,29 @@ export function AuthProvider({ children }) {
       setLoading(false);
     }, 5000);
 
-    api("/auth/me")
-      .then((data) => {
-        setUser(data.user);
-      })
-      .catch(() => {
-        localStorage.removeItem("aurum_token");
-        setUser(null);
-      })
-      .finally(() => {
-        clearTimeout(timeout);
-        setLoading(false);
-      });
+    api("/api/auth/me")
+      .then((data) => { setUser(data.user); })
+      .catch(() => { localStorage.removeItem("aurum_token"); setUser(null); })
+      .finally(() => { clearTimeout(timeout); setLoading(false); });
   }, []);
 
   const login = async (email, password) => {
-    const data = await api("/auth/login", {
+    const data = await api("/api/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
-
     localStorage.setItem("aurum_token", data.token);
     setUser(data.user);
-
     return data.user;
   };
 
   const confirmRegister = async (email, code) => {
-    const data = await api("/auth/register/verify", {
+    const data = await api("/api/auth/register/verify", {
       method: "POST",
       body: JSON.stringify({ email, code }),
     });
-
     localStorage.setItem("aurum_token", data.token);
     setUser(data.user);
-
     return data.user;
   };
 
@@ -66,20 +50,11 @@ export function AuthProvider({ children }) {
   };
 
   const updateAvatar = (avatar) => {
-    setUser((prev) => (prev ? { ...prev, avatar } : prev));
+    setUser(prev => prev ? { ...prev, avatar } : prev);
   };
 
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        login,
-        confirmRegister,
-        logout,
-        updateAvatar,
-      }}
-    >
+    <AuthContext.Provider value={{ user, loading, login, confirmRegister, logout, updateAvatar }}>
       {children}
     </AuthContext.Provider>
   );
@@ -88,3 +63,4 @@ export function AuthProvider({ children }) {
 export function useAuth() {
   return useContext(AuthContext);
 }
+
